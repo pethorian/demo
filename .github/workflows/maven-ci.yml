@@ -1,6 +1,6 @@
 name: Java CI with Maven
 
-# Dispara o CI quando houver push ou pull request nas branches main e desenv
+# Dispara o CI quando houver push em QUALQUER branch ou pull request para main/desenv
 on:
   push:
     branches: [ "**" ]
