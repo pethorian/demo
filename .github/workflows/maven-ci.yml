@@ -1,11 +1,9 @@
 name: Java CI with Maven
 
-# Dispara o CI quando houver push em QUALQUER branch ou pull request para main/desenv
+# Dispara o CI apenas quando houver push (PRs já vêm de um push anterior)
 on:
   push:
     branches: [ "**" ]
-  pull_request:
-    branches: [ "main", "desenv" ]
 
 # Evita que múltiplos builds rodem para a mesma branch simultaneamente
 concurrency:
@@ -16,10 +14,6 @@ concurrency:
 jobs:
   build:
     name: Build and Test
-    # Só roda o build se for um PUSH ou se for um PR NÃO aberto pelo robô (evita build duplo)
-    if: |
-      github.event_name == 'push' || 
-      (github.event_name == 'pull_request' && github.actor != 'github-actions[bot]')
     runs-on: ubuntu-latest
 
     # Passos que serão executados
