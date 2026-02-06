@@ -62,6 +62,7 @@ public class Game {
     @JoinTable(name = "game_modos_de_jogo", joinColumns = @JoinColumn(name = "game_id"), inverseJoinColumns = @JoinColumn(name = "modo_id"))
     private List<ModoDeJogo> modosDeJogo;
 
+    // teste
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "game_id")
     private List<Screenshot> screenshots;
