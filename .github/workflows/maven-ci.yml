@@ -42,3 +42,31 @@ jobs:
       with:
         name: demo-app-jar
         path: target/*.jar
+
+  automerge:
+    name: Auto Merge to Desenv
+    needs: build
+    # Só roda se o build passar E não estivermos na main ou desenv
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/desenv'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Auto-merge PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Pega o nome da branch atual
+          BRANCH_NAME=$(echo ${github.ref#refs/heads/})
+          
+          # Tenta criar a PR e fazer o merge usando a CLI do GitHub (gh)
+          gh pr create --base desenv --head "$BRANCH_NAME" --title "Auto-merge: $BRANCH_NAME" --body "Merge automático gerado pelo CI após sucesso nos testes." || echo "PR já existe ou não pôde ser criada"
+          
+          # Faz o merge usando Squash (esmaga os commits em um só na desenv)
+          gh pr merge --squash --auto --delete-branch || echo "Não foi possível realizar o auto-merge"
