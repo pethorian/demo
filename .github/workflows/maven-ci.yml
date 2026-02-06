@@ -62,8 +62,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Pega o nome da branch atual
-          BRANCH_NAME=$(echo ${github.ref#refs/heads/})
+          # Captura o nome da branch atual de forma segura
+          BRANCH_NAME="${{ github.ref_name }}"
           
           # Tenta criar a PR e fazer o merge usando a CLI do GitHub (gh)
           gh pr create --base desenv --head "$BRANCH_NAME" --title "Auto-merge: $BRANCH_NAME" --body "Merge automático gerado pelo CI após sucesso nos testes." || echo "PR já existe ou não pôde ser criada"
