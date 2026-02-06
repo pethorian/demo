@@ -66,6 +66,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Baixa todo o histórico para evitar erros de 'not a commit'
 
       - name: Auto-merge PR
         env:
@@ -74,11 +76,26 @@ jobs:
           # Captura o nome da branch atual de forma segura
           BRANCH_NAME="${{ github.ref_name }}"
           
+          # Sincroniza todas as branches remotas
+          git fetch --all
+          
           # Tenta criar a PR e fazer o merge usando a CLI do GitHub (gh)
           gh pr create --base desenv --head "$BRANCH_NAME" --title "Auto-merge: $BRANCH_NAME" --body "Merge automático gerado pelo CI após sucesso nos testes." || echo "PR já existe ou não pôde ser criada"
           
           # Tenta o AUTO-MERGE (Jeito elegante que espera os testes se necessário)
-          gh pr merge --squash --auto --delete-branch || \
+          if gh pr merge --squash --auto --delete-branch; then
+            echo "✅ Merge automático agendado com sucesso!"
           # Se falhar (ex: auto-merge desativado), tenta o MERGE DIRETO (Plano B)
-          gh pr merge --squash --delete-branch || \
-          echo "Não foi possível realizar o merge de nenhuma forma. Verifique se há conflitos ou se a opção 'Allow auto-merge' está ativa no GitHub."
+          elif gh pr merge --squash --delete-branch; then
+            echo "✅ Merge direto realizado com sucesso!"
+          else
+            echo "⚠️ Merge manual necessário. Tentando apenas o merge..."
+            # Último recurso: merge sem deletar (pode ser bloqueado por Restrict deletions)
+            gh pr merge --squash || echo "❌ Não foi possível realizar o merge. Verifique conflitos ou permissões."
+          fi
+          
+          # Se a branch ainda existir remotamente, tenta deletar manualmente
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "🗑️ Tentando deletar a branch $BRANCH_NAME manualmente..."
+            git push origin --delete "$BRANCH_NAME" || echo "⚠️ Não foi possível deletar a branch. Verifique se 'Restrict deletions' não está bloqueando branches de feature."
+          fi
