@@ -77,5 +77,8 @@ jobs:
           # Tenta criar a PR e fazer o merge usando a CLI do GitHub (gh)
           gh pr create --base desenv --head "$BRANCH_NAME" --title "Auto-merge: $BRANCH_NAME" --body "Merge automático gerado pelo CI após sucesso nos testes." || echo "PR já existe ou não pôde ser criada"
           
-          # Faz o merge usando Squash (esmaga os commits em um só na desenv)
-          gh pr merge --squash --auto --delete-branch || echo "Não foi possível realizar o auto-merge"
+          # Tenta o AUTO-MERGE (Jeito elegante que espera os testes se necessário)
+          gh pr merge --squash --auto --delete-branch || \
+          # Se falhar (ex: auto-merge desativado), tenta o MERGE DIRETO (Plano B)
+          gh pr merge --squash --delete-branch || \
+          echo "Não foi possível realizar o merge de nenhuma forma. Verifique se há conflitos ou se a opção 'Allow auto-merge' está ativa no GitHub."
